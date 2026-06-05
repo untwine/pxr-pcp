@@ -48,7 +48,7 @@ def "Model" (
             # in a different model, the other model's ancestral variant set
             # selection is not affected by variant selection opinions in the 
             # root that references /Model
-            def "InstanceViaOtherModelReference" (
+            def "InstanceViaOtherModelRef" (
                 prepend references = </OtherModel/_prototype>
             )
             {
