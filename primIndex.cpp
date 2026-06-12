@@ -3127,19 +3127,25 @@ _FindContainingVariantSelection(SdfPath p)
     return p;
 }
 
-// Use the mapping function to figure out the path of the site to
-// inherit, by mapping the parent's site back to the source.
+// Use the transfer function to figure out the path of the site to inherit, by
+// mapping the source path to the destination through the transfer function.
 static SdfPath
 _DetermineInheritPath(
-    const SdfPath & parentPath,
-    const PcpMapExpression & inheritMap )
+    const SdfPath & destParentPath,
+    const SdfPath & sourceChildPath,
+    const PcpMapExpression & transferFunc)
 {
-    // For example, given an inherit map like this:
-    //    source: /Class
-    //    target: /Model
-    //
-    // Say we are adding this inherit arc to </Model>; we'll map
-    // the target path back to </Class>.
+    TRACE_FUNCTION();
+
+    // For example, given a transfer function like this that maps the source
+    // parent to the destination parent:
+    //    /Model -> /Char
+    //    / -> /
+    // A child of the source node child /Char/Class would map to /Model/Class
+    // under the destination node, while the source node child _class_Global
+    // would identity map to itself, _class_Global, under the destination node.
+    // If the source node had a child /Model/Class, that would fail to map to
+    // the destination node.
     //
     // Why don't we just use the source path directly?
     // The reason we use a mapping function to represent the arc,
@@ -3161,23 +3167,25 @@ _DetermineInheritPath(
     // the variant selections before mapping the path and then re-add
     // them afterwards.
     //
-    if (!parentPath.ContainsPrimVariantSelection()) {
+    if (!destParentPath.ContainsPrimVariantSelection()) {
         // Easy case: Just map the site back across the inherit.
-        return inheritMap.MapTargetToSource(parentPath);
+        return transferFunc.MapSourceToTarget(
+            sourceChildPath.StripAllVariantSelections());
     } else {
-        // Harder case: The site path has variant selections.
+        // Harder case: The destination site path has variant selections.
         // We want to map the site's namespace back across the
         // inherit, but retain the embedded variant selections.
 
         // Find the nearest containing variant selection.
-        SdfPath varPath = _FindContainingVariantSelection(parentPath);
+        SdfPath varPath = _FindContainingVariantSelection(destParentPath);
         TF_VERIFY(!varPath.IsEmpty());
 
         // Strip the variant selections from the site path, apply the
-        // inherit mapping, then re-add the variant selections.
-        return inheritMap.MapTargetToSource(
-                parentPath.StripAllVariantSelections() )
-                .ReplacePrefix( varPath.StripAllVariantSelections(), varPath );
+        // inherit mapping, then re-add the variant selections that map to the
+        // destination.
+        return transferFunc.MapSourceToTarget(
+            sourceChildPath.StripAllVariantSelections() )
+            .ReplacePrefix( varPath.StripAllVariantSelections(), varPath );
     }
 }
 
@@ -3196,6 +3204,7 @@ _PropagateNodeToRoot(
 // returns the existing node.
 static PcpNodeRef
 _AddClassBasedArc(
+    const SdfPath &inheritPath,
     PcpArcType arcType,
     PcpNodeRef parent,
     PcpNodeRef origin,
@@ -3218,10 +3227,6 @@ _AddClassBasedArc(
         inheritArcNum,
         ignoreIfSameAsSite == PcpLayerStackSite() ? 
             "<none>" : Pcp_FormatSite(ignoreIfSameAsSite).c_str());
-
-    // Use the inherit map to figure out the site path to inherit.
-    SdfPath inheritPath = 
-        _DetermineInheritPath( parent.GetPath(), inheritMap );
 
     // We need to check the parent node's arc type in a few places
     // below. PcpNode::GetArcType is insufficient because we could be in a
@@ -3472,7 +3477,8 @@ _AddClassBasedArcs(
                 /* source */ arcPath, /* targetNode */ node)
             .AddRootIdentity();
 
-        _AddClassBasedArc(arcType,
+        _AddClassBasedArc(arcPath,
+            arcType,
             /* parent = */ node,
             /* origin = */ node,
             mapExpr,
@@ -3704,7 +3710,11 @@ _EvalImpliedClassTree(
         // a redundant inherit.
         //
         if (!destChild) {
+            SdfPath inheritPath = _DetermineInheritPath(
+                destNode.GetPath(), srcChild.GetPath(), transferFunc);
+
             destChild = _AddClassBasedArc(
+                inheritPath,
                 srcChild.GetArcType(),
                 /* parent = */ destNode,
                 /* origin = */ srcChild,
