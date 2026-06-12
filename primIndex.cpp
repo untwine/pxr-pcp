@@ -3717,23 +3717,7 @@ _EvalImpliedClassTree(
         // If we successfully added the arc (or found it already existed)
         // recurse on nested classes.  This will build up the full
         // class hierarchy that we are inheriting.
-        // Optimization: Recursion requires some cost to set up
-        // childTransferFunc, below.  Before we do that work,
-        // check if there are any nested inherits.
         if (destChild && _HasClassBasedChild(srcChild)) {
-            // Determine the transferFunc to use for the nested child,
-            // by composing the functions to walk up from the srcChild,
-            // across the transferFunc, and down to the destChild.
-            // (Since we are walking down to destChild, we use the
-            // inverse of its mapToParent.)
-            //
-            // This gives us a childTransferFunc that will map the
-            // srcChild namespace to the destChild namespace, so
-            // that can continue propagating implied classes from there.
-            //
-            PcpMapExpression childTransferFunc =
-                destClassFunc.Inverse()
-                .Compose(transferFunc.Compose(srcChild.GetMapToParent()));
 
             // If destChild is a specializes node, ensure we only add
             // implied children to its corresponding propagated node to
@@ -3745,7 +3729,7 @@ _EvalImpliedClassTree(
             }
 
             _EvalImpliedClassTree(destChild, srcChild,
-                                  childTransferFunc, 
+                                  transferFunc, 
                                   /* srcNodeIsStartOfTree = */ false,
                                   indexer);
         }
