@@ -1,0 +1,59 @@
+// Copyright 2016 Pixar
+//
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
+//
+
+#ifndef PXR_PCP_H
+#define PXR_PCP_H
+
+#include <pxr/arch/pxr.h>
+#include <pxr/tf/pxr.h>
+#include <pxr/trace/pxr.h>
+#include <pxr/vt/pxr.h>
+#include <pxr/sdf/pxr.h>
+#include <pxr/work/pxr.h>
+#include <pxr/ar/pxr.h>
+
+#ifdef PXR_PYTHON_SUPPORT_ENABLED
+#include <pxr/boost/python/common.hpp>
+#endif
+
+#define PCP_MAJOR_VERSION @PROJECT_VERSION_MAJOR@
+#define PCP_MINOR_VERSION @PROJECT_VERSION_MINOR@
+#define PCP_PATCH_VERSION @PROJECT_VERSION_PATCH@
+
+#define PCP_VERSION (PCP_MAJOR_VERSION * 10000 \
+                   + PCP_MINOR_VERSION * 100   \
+                   + PCP_PATCH_VERSION)
+
+#define PXR_NS pxr
+#define PCP_INTERNAL_NS pxrInternal_v@PROJECT_VERSION_MAJOR@_@PROJECT_VERSION_MINOR@_@PROJECT_VERSION_PATCH@__pxrReserved__
+#define PXR_NS_GLOBAL ::PXR_NS
+
+namespace PCP_INTERNAL_NS { }
+
+namespace PXR_NS {
+    using namespace PCP_INTERNAL_NS;
+}
+
+// Import direct dependencies into pcp's internal namespace.
+// This keeps resolution correct if package versions ever drift.
+namespace PCP_INTERNAL_NS {
+    using namespace ARCH_INTERNAL_NS;
+    using namespace TF_INTERNAL_NS;
+    using namespace TRACE_INTERNAL_NS;
+    using namespace VT_INTERNAL_NS;
+    using namespace SDF_INTERNAL_NS;
+    using namespace WORK_INTERNAL_NS;
+    using namespace AR_INTERNAL_NS;
+#ifdef PXR_PYTHON_SUPPORT_ENABLED
+    using namespace BOOST_INTERNAL_NS;
+#endif
+}
+
+#define PCP_NAMESPACE_OPEN_SCOPE   namespace PCP_INTERNAL_NS {
+#define PCP_NAMESPACE_CLOSE_SCOPE  }
+#define PCP_NAMESPACE_USING_DIRECTIVE using namespace PXR_NS;
+
+#endif // PXR_PCP_H
