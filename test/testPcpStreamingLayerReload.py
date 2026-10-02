@@ -11,15 +11,12 @@ import os, unittest
 class TestPcpStreamingLayerReload(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        testRoot = os.path.join(os.path.dirname(__file__), 'PcpPlugins')
-        testPluginsDso = testRoot + '/lib'
-        testPluginsDsoSearch = testPluginsDso + '/*/Resources/'
-
         # Register dso plugins.  Discard possible exception due to
         # TestPlugDsoEmpty.  The exception only shows up here if it happens in
         # the main thread so we can't rely on it.
         try:
-            Plug.Registry().RegisterPlugins(testPluginsDsoSearch)
+            Plug.Registry().RegisterPlugins(
+                os.environ.get("PCP_STREAMING_LAYER_RELOAD_PLUGIN"))
         except RuntimeError:
             pass
 

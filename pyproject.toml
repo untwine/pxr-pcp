@@ -1,0 +1,60 @@
+[build-system]
+requires = [
+    "scikit-build-core",
+    "pxr-arch-dev==26.8.*",
+    "pxr-tf-dev==26.8.*",
+    "pxr-trace-dev==26.8.*",
+    "pxr-vt-dev==26.8.*",
+    "pxr-sdf-dev==26.8.*",
+    "pxr-work-dev==26.8.*",
+    "pxr-ar-dev==26.8.*",
+    "pxr-boost-dev==26.8.*",
+    "pxr-tbb-dev==2023.1.0.*"
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pxr-pcp"
+version = "26.8"
+description = "Scenegraph composition library used in OpenUSD"
+readme = "README.md"
+requires-python = ">=3.8"
+license-files = ["LICENSE.txt", "NOTICE.txt"]
+keywords = ["pixar", "open-usd"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+]
+dependencies = [
+    "pxr-arch==26.8.*",
+    "pxr-tf==26.8.*",
+    "pxr-trace==26.8.*",
+    "pxr-vt==26.8.*",
+    "pxr-sdf==26.8.*",
+    "pxr-work==26.8.*",
+    "pxr-ar==26.8.*",
+    "pxr-boost==26.8.*",
+    "pxr-tbb==2023.1.0.*"
+]
+
+[project.urls]
+Repository = "https://github.com/untwine/pxr-pcp"
+
+[tool.scikit-build]
+cmake.version = ">=3.23,<4.3"
+cmake.args = [
+    "-DBUILD_TESTS=OFF",
+    "-DBUILD_SHARED_LIBS=ON",
+    "-DBUILD_PYTHON_BINDINGS=ON",
+    "-DCMAKE_INSTALL_LIBDIR=pxr/.libs",
+    "-DCMAKE_INSTALL_INCLUDEDIR=pxr-pcp/include",
+    "-DCMAKE_INSTALL_DATAROOTDIR=pxr-pcp",
+    "-DCMAKE_INSTALL_PYTHON_LIBDIR=.",
+
+    # Aligned operator delete (used by TBB) requires macOS 10.13+
+    "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13"
+]
+wheel.exclude = ["pxr-pcp"]
+sdist.exclude = ["test", ".github"]

@@ -1,0 +1,3 @@
+add_subdirectory(TestPcpAssetPathDynamicFileFormatPlugin)
+add_subdirectory(TestPcpDynamicFileFormatPlugin)
+add_subdirectory(TestPcpStreamingLayerReload)
